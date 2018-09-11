@@ -1,3 +1,6 @@
 [submodule "pytorch"]
 	path = pytorch
 	url = https://github.com/pytorch/pytorch
+[submodule "detectron"]
+	path = detectron
+	url = https://github.com/huawei-tomas/detectron.git

@@ -43,8 +43,15 @@ RUN mkdir /app/pytorch/build && \
     -DCUDNN_INCLUDE_DIR=/usr/include/x86_64-linux-gnu \
     -DUSE_OPENCV=ON \
     .. && \
-    make -j$(grep -c ^processor /proc/cpuinfo) && \
-    make install
+    make -j$(grep -c ^processor /proc/cpuinfo) install
+
+
+COPY ./detectron /app/detectron
+
+ENV PYTHONPATH=/app/pytorch/build
+
+RUN pip install hypothesis
+
 
 WORKDIR "/app"
 
