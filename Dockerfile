@@ -23,7 +23,7 @@ RUN apt-get update && \
     protobuf-compiler \
     python-dev \
     python-pip \
-    nano
+    nano 
 
 # Have to install setuptools and wheel first or it craps out.
 RUN pip install setuptools wheel && \
@@ -52,8 +52,29 @@ ENV PYTHONPATH=/app/pytorch/build
 
 RUN pip install hypothesis
 
+COPY ./model_final.pkl /app/model_final.pkl
+
+COPY ./server.py /app/server.py
+
+ENV DETECTRON_HOME=/app/detectron
+
+ENV CAFFE2_HOME=/app/pytorch/build
+
+RUN pip install cython
+
+RUN pip install urllib3 \ 
+    opencv-python \
+    pycocotools \
+    scipy \
+    matplotlib==2.2.3 \
+    pillow \
+    flask \
+    flask_restful
+
+RUN cd $DETECTRON_HOME && make
 
 WORKDIR "/app"
 
+ENTRYPOINT ["python"]
 
-CMD ["/bin/bash"]
+CMD ["server.py"]
