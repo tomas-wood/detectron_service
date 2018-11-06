@@ -79,7 +79,7 @@ api = Api(app)
 class Detectron(Resource):
     """Get an input image and run FasterRCNN on it to get bboxes.
     """
-    def put(self, image_id):
+    def post(self, image_id):
         img_url= request.form['data']
         r = http.request("GET", img_url)
         if r.status == 200:
@@ -106,4 +106,4 @@ class Detectron(Resource):
 api.add_resource(Detectron, '/<string:image_id>')
 
 if __name__ == "__main__":
-    app.run(use_reloader=False, debug=True, host='0.0.0.0')
+    app.run(use_reloader=False, debug=True, host='0.0.0.0', port=8085)
