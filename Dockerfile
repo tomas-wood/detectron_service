@@ -1,6 +1,12 @@
-FROM nvidia/cuda:9.2-cudnn7-devel-ubuntu16.04
+FROM ubuntu:16.04
 
-COPY ./pytorch /app/pytorch
+COPY . /app
+
+ENV DETECTRON_HOME=/app/detectron
+ENV PYTHONPATH=/app/pytorch/build
+ENV CAFFE2_HOME=/app/pytorch/build
+
+
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -23,58 +29,29 @@ RUN apt-get update && \
     protobuf-compiler \
     python-dev \
     python-pip \
-    nano 
-
-# Have to install setuptools and wheel first or it craps out.
-RUN pip install setuptools wheel && \
-    pip install future numpy protobuf pyyaml typing
-
-# Naming cudnn.h weird shit does not help folks.
-RUN cp /usr/include/x86_64-linux-gnu/cudnn_v7.h /usr/include/x86_64-linux-gnu/cudnn.h
-
-# Okay that didnt work we are just going to have to do it ourself with cmake.
-RUN mkdir /app/pytorch/build && \
+    nano  && \
+    pip install setuptools wheel && \
+    pip install future numpy protobuf pyyaml typing && \
+    mkdir /app/pytorch/build && \
     cd /app/pytorch/build && \
-    cmake \
-    -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-9.2  \
-    -DCUDA_CUDA_LIB=/usr/local/cuda-9.2/targets/x86_64-linux/lib/stubs/libcuda.so \
-    -DCUDA_INCLUDE_DIRS=/usr/local/cuda/include \
-    -DCUDNN_LIBRARY=/usr/lib/x86_64-linux-gnu/libcudnn.so.7 \
-    -DCUDNN_INCLUDE_DIR=/usr/include/x86_64-linux-gnu \
-    -DUSE_OPENCV=ON \
-    .. && \
-    make -j$(grep -c ^processor /proc/cpuinfo) install
-
-
-COPY ./detectron /app/detectron
-
-ENV PYTHONPATH=/app/pytorch/build
-
-RUN pip install hypothesis
-
-COPY ./model_final.pkl /app/model_final.pkl
-
-COPY ./server.py /app/server.py
-
-ENV DETECTRON_HOME=/app/detectron
-
-ENV CAFFE2_HOME=/app/pytorch/build
-
-RUN pip install cython
-
-RUN pip install urllib3 \ 
+    cmake -DUSE_CUDA=0 .. && \
+    make -j$(grep -c ^processor /proc/cpuinfo) install && \
+    pip install hypothesis && \
+    pip install cython && \
+    pip install urllib3 \
     opencv-python \
     pycocotools \
     scipy \
     matplotlib==2.2.3 \
     pillow \
     flask \
-    flask_restful
+    flask_restful && \
+    cd $DETECTRON_HOME && \
+    make && \
+    ln -s /usr/local/lib/libcaffe2.so /usr/lib/libcaffe2.so
 
-RUN cd $DETECTRON_HOME && make
+#WORKDIR "/app"
 
-WORKDIR "/app"
+#ENTRYPOINT ["python"]
 
-ENTRYPOINT ["python"]
-
-CMD ["server.py"]
+#CMD ["server.py"]

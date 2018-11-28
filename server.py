@@ -70,8 +70,17 @@ def init_caffe2():
 
     return model
 
-model = init_caffe2()
+def load_model():
+    with open("out/model_init.pb") as f:
+        init_net = f.read()
+    with open("model.pb") as f:
+        predict_net = f.read()
 
+    return workspace.Predictor(init_net, predict_net)
+
+
+#model = init_caffe2()
+model = load_model()
 app = Flask(__name__)
 api = Api(app)
 
@@ -87,11 +96,12 @@ class Detectron(Resource):
             im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
         else:
             return jsonify([])
+        #ret = model.run({"data": im})
 
         with c2_utils.NamedCudaScope(gpu_id):
             cls_boxes, _, _ = infer_engine.im_detect_all(
                 model, im, None
-            )
+           )
 
 	cls_boxes_str = pickle.dumps(cls_boxes)
         res = {'cls_boxes':cls_boxes_str}
